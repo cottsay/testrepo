@@ -1,0 +1,27 @@
+/*!
+ * \file mainpage.dox
+ *
+ * \mainpage CSC 510 Programming Assignment #2
+ *
+ * \section course_section Course Information
+ *
+ * \author Scott K Logan
+ *
+ * \date Wed Apr 03, 2013
+ *
+ * \par Professor:
+ * Dr. Christer Karlsson
+ *
+ * \par Course:
+ * CSC 410/510
+ *
+ * \par Location:
+ * McLaury 304
+ * 
+ * \section program_description Program Description
+ *
+ * \section results Results
+ *
+ * \section conclusion Conclusion
+ */
+
