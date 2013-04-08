@@ -19,9 +19,154 @@
  * McLaury 304
  * 
  * \section program_description Program Description
+ * -# Suppose we toss darts randomly at a square dartboard, where the bullseye
+ *    is at the origin, and whose sides are 2 ft in length. Suppose also that
+ *    there is a circle with radius 1 ft inscribed in the square dartboard. If
+ *    the points that are hit by the darts are uniformly distributed (and
+ *    always landing in the square), then the number of darts that hit inside
+ *    the circle should approximately satisfy the equation:
+ *    \f[
+ *    \frac{Number\ in\ circle}{Total\ number\ darts} = \frac{\pi}{4}
+ *    \f]
+ *    Since the ratio of the area of the circle to the area of the square is
+ *    &pi;/4. We can use this formula to estimate the value of &pi; with a
+ *    random number generator:
+ *    \verbatim
+number_in_circle ← 0
+for toss 0 to number_tosses do
+	x ← random double -1 to 1
+	y ← random double -1 to 1
+	if (x^2 + y^2) <= 1
+		number_in_circle++
+pi_estimate ← 4* number_in_circle / number_tosses\endverbatim
+ *    This is a so called Monte Carlo process, as it uses randomness to solve a
+ *    problem.
+ *
+ *    Write an MPI program that uses a Monte Carlo method to estimate &pi;.
+ *    Process 0 (root) should read in the total number of tosses and broadcast
+ *    it to the other processes. Use <b>MPI_Reduce</b> to find the global sum
+ *    of the local varable <b>number_in_circle</b> and have process 0 (root)
+ *    print the result. Use <b>long long int</b> for the number of tosses and
+ *    hits in the circle, get a reasonable estimate (that is correct to 5 to 6
+ *    decimal places) of &pi;. Do a performance analysis (see page 58-60 of
+ *    the book) and calculate the <b><i>speedup</i></b> and
+ *    <b><i>efficiency</i></b> of your parallel solution on p = {1, 8, 16, 32,
+ *    64} processes (in short, single core on one node, all cores on one, two,
+ *    four and eight nodes). Also calculate the <b><i>speedup</i></b> and
+ *    <b><i>efficiency</i></b> for half and double the problem size for p =
+ *    {1, 8, 16, 32, 64}. Does changing the problem size have any significantly
+ *    impact on the precision of the estimate?
+ * -# A ping-pong is a communication in which two messages are sent, first from
+ *    process A to process B (ping) and then from B back to process A (pong).
+ *    Timing blocks of repeated ping-pongs is common way to estimate the
+ *    communication cost. Assume that the time needed to send an n-byte message
+ *    is &lambda;+n/&beta;. Write a program implementing the “ping pong” test to
+ *    determine &lambda; (latency) and &beta; (bandwidth) on your parallel
+ *    computer. Design the program to run on exactly two processes (on two
+ *    different nodes, or machines). Process 0 records the time and then sends a
+ *    message to process 1. After process 1 receives the message, it immediately
+ *    sends it back to process 0. Process 0 receives the message and records the
+ *    time. The elapsed time divided by 2 is the average message-passing time.
+ *    Try sending messages multiple times, and experiment with message of
+ *    different lengths, to generate enough data points that you can estimate
+ *    &lambda; and &beta;.
+ * -# Write an MPI program that computes a global sum and distributes the
+ *    results to all processes using a butterfly algorithm (see pg 107). First
+ *    write your code for the special case in which <b>comm_sz</b> (number of
+ *    processes) is a power of two. Then modify your code so that it will be
+ *    able to handle any number of processes. Time your code and compare the
+ *    results from your code against the results for <b>MPI_Allreduce()</b>,
+ *    using the same number of processes.
+ *
+ * <b>Assignment Submission</b>
+ *
+ * Your homework is due at the beginning of class. Tar or zip all documentation
+ * and source files together. The header of each source file should contain all
+ * the normal information (name, class assignment etc), but it should also
+ * include information on how to compile source and run the code.
  *
  * \section results Results
  *
- * \section conclusion Conclusion
+ * \subsection prob1 Problem 1
+ *
+ * | component       | file      |
+ * | --------------- | --------- |
+ * | Implementation: | proj2.1.c |
+ *
+ * <b>Runtime Results:</b>
+ *
+ * Problem Size: 100,000,000
+ * |  np |    error |     time |  speedup | efficiency |
+ * | --- | -------- | -------- | -------- | ---------- |
+ * |   1 |-0.000242 | 1.924090 |      N/A |      N/A   |
+ * |   8 |-0.000446 | 0.240410 | 8.003375 | 1.000422   |
+ * |  16 |-0.000301 | 0.119930 |16.043439 | 1.002715   |
+ * |  32 |-0.000279 | 0.060578 |31.762262 | 0.992571   |
+ * |  64 |-0.000182 | 0.030683 |62.708588 | 0.979822   |
+ *
+ * Problem Size: 1,000,000,000
+ * |  np |    error |     time |  speedup | efficiency |
+ * | --- | -------- | -------- | -------- | ---------- |
+ * |   1 | 0.000132 |18.642886 |      N/A |      N/A   |
+ * |   8 | 0.000009 | 2.332931 | 7.991186 | 0.998898   |
+ * |  16 | 0.000050 | 1.166300 |15.984640 | 0.999040   |
+ * |  32 |-0.000066 | 0.584044 |31.920346 | 0.997511   |
+ * |  64 | 0.000040 | 0.301266 |61.881822 | 0.966903   |
+ *
+ * These two runs of the program seem to indicate that there is a substantial
+ * difference in error for the &pi; calculation. However, I did not notice this
+ * to be consistently true. Since we are using random numbers, there are often
+ * cases where the error is very high despite a large problem size.
+ *
+ * \subsection prob2 Problem 2
+ *
+ * | component       | file      |
+ * | --------------- | --------- |
+ * | Implementation: | proj2.2.c |
+ *
+ * <b>Runtime Results:</b>
+ *
+ * Bandwidth at different sizes:
+ * | size (bytes) | transfer time (s) | rate (B/s)       |
+ * | ------------ | ----------------- | ---------------- |
+ * |        32768 |          0.001042 |  34348360.473593 |
+ * |       131072 |          0.002095 |  65324054.847623 |
+ * |       524288 |          0.008183 |  64767018.813663 |
+ * |      2097152 |          0.018909 | 111423590.708947 |
+ * |     16777216 |          0.144063 | 116528307.205139 |
+ * |    134217728 |          1.150495 | 116669773.406031 |
+ * Average Rate: 82854.997633 KB/s
+ *
+ * Average latency: 0.000088s
+ *
+ * It appears that the latency is extremely small, and that the rate approaches
+ * the maximum throughput of gigabit ethernet as the payload size increases.
+ * The poor performance at smaller payloads is probably due to the overhead
+ * of the transfer in MPI.
+ *
+ * \subsection prob3 Problem 3
+ *
+ * | component       | file       |
+ * | --------------- | ---------- |
+ * | Implementation: | proj2.3a.c |
+ * | Implementation: | proj2.3b.c |
+ *
+ * To best analyze the performance of my implementation of the butterfly
+ * algorithm against the <b>MPI_Allreduce()</b> routine, I plotted runtimes
+ * for each algorithm across a variety of process distribution levels. As you
+ * can see, the butterfly algorithm does not quite out-perform the built-in
+ * MPI_Allreduce routine, but does give similar performance, certainly within
+ * same O(log(n)) bounds.
+ *
+ * \image html proj2.3analysis.png "Overall performance of MPI_Allreduce vs Butterfly Algorithm"
+ *
+ * To implement part b of this problem, I introduced an algorithm that adds two
+ * steps to the computation process. First, the <i>spill</i> nodes, being nodes
+ * that surpass the highest two-power in the problem size, all pass their
+ * numbers to non-spill nodes for summation. Then the normal log(n) butterfly
+ * algorithm runs it's course using only the non-spill nodes, and the final step
+ * is to send the result to the spill nodes so all n nodes have the resulting
+ * sum. This means that there are log(n)/log(2) + 2 communication steps in the
+ * algorithm.
  */
 
