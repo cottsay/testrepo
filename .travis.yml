@@ -1,0 +1,6 @@
+language: c
+compiler:
+  - gcc
+before_install:
+ - sudo apt-get install -qq libopenmpi-dev
+script: make
